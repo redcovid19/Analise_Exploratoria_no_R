@@ -1,0 +1,175 @@
+---
+title: "Análise Exploratória"
+author: "ABC - Estatística"
+Date: 06/06/2021
+output:
+  rmdformats::material:
+    highlight: kate
+---
+# Análise Exploratória
+Importando base de dados
+```{r}
+url <- "https://codigos.ufsc.br/andre.zibetti/site-probabilidade-R/-/raw/33bfe846c5d1f4b41bd3bbf74f29330556955d9e/milsa.csv"
+milsa <- read.csv(url)
+```
+Tipo de cada variável
+```{r}
+str(milsa)
+```
+Conhecendo os dados
+```{r}
+head(milsa)
+```
+Declarando variável Inst como ordinal
+```{r}
+milsa$Inst <- factor(milsa$Inst, ordered = TRUE)
+```
+Criando variável Idade
+```{r}
+milsa$Idade <- milsa$Anos + milsa$Meses/12
+```
+# Análise Univariada
+## Variável Qualitativa Nominal
+```{r}
+## Frequência absoluta
+civil.tb <- table(milsa$Est.civil)
+civil.tb
+## Frequência relativa
+prop.table(civil.tb)
+## Gráfico de Barras
+barplot(civil.tb)
+## Gráfico de Setores
+pie(civil.tb)
+```
+## Variável Qualitativa Ordinal
+```{r}
+## Frequência absoluta
+inst.tb <- table(milsa$Inst)
+inst.tb
+## Frequência relativa
+prop.table(inst.tb)
+## Gráfico de Barras
+barplot(inst.tb)
+## Menor para maior
+barplot(sort(inst.tb))
+## Maior para menor
+barplot(sort(inst.tb, decreasing = TRUE))
+```
+## Variável quantitativa discreta
+```{r}
+## Máximo e mínimo
+range(milsa$Filhos, na.rm = TRUE)
+## Amplitude = Máximo - Mínimo
+diff(range(milsa$Filhos, na.rm = TRUE))
+## Variância
+var(milsa$Filhos, na.rm = TRUE)
+## Desvio-padrão
+sd(milsa$Filhos, na.rm = TRUE)
+## Coeficiente de variação
+sd(milsa$Filhos, na.rm = TRUE)/mean(milsa$Filhos,na.rm = TRUE)
+## Quartis
+(filhos.qt <- quantile(milsa$Filhos, na.rm = TRUE))
+## Amplitude interquartílica
+filhos.qt[4]-filhos.qt[2]
+## Resumindo os dados
+summary(milsa$Filhos)
+## Frequência absoluta
+filhos.tb <- table(milsa$Filhos)
+## Gráfico de linhas
+plot(filhos.tb)
+## Frequência relativa
+filhos.tbr <- prop.table(filhos.tb)
+## Frequência acumulada
+filhos.tba <- cumsum(filhos.tbr)
+## Frequência relativa acumulada
+plot(filhos.tba, type = "S") # tipo step (escada)
+```
+## Variável quantitativa contínua
+```{r}
+## Máximo e mínimo
+range(milsa$Salario, na.rm = TRUE)
+## Amplitude = Máximo - Mínimo
+diff(range(milsa$Salario, na.rm = TRUE))
+## Variância
+var(milsa$Salario, na.rm = TRUE)
+## Desvio-padrão
+sd(milsa$Salario, na.rm = TRUE)
+## Coeficiente de variação
+sd(milsa$Salario, na.rm = TRUE)/mean(milsa$Salario,na.rm = TRUE)
+## Quartis
+(filho.qt <- quantile(milsa$Filhos, na.rm = TRUE))
+## Amplitude interquartílica
+filhos.qt[4]-filhos.qt[2]
+## Resumindo os dados
+summary(milsa$Salario)
+## Histograma
+hist(milsa$Salario,freq = FALSE,labels = TRUE,ylim = c(0,0.12))
+## Boxplot
+boxplot(milsa$Salario)
+```
+
+
+# Análise Bivariada
+## Qualitativa vs qualitativa
+```{r}
+## Tabela de frequências absolutas
+civ.inst.tb <- with(milsa, table(Est.civil, Inst))
+civ.inst.tb
+addmargins(civ.inst.tb)
+## Frequência relativa global
+prop.table(civ.inst.tb)
+## Frequência relativa por linha
+prop.table(civ.inst.tb, margin = 1)
+## Frequência relativa por coluna
+prop.table(civ.inst.tb, margin = 2)
+## Gráfico de Barras
+barplot(civ.inst.tb, legend = TRUE)
+barplot(t(civ.inst.tb), legend = TRUE)
+barplot(civ.inst.tb, beside = TRUE, legend = TRUE)
+barplot(t(prop.table(civ.inst.tb)), beside = TRUE, legend = TRUE)
+```
+## Qualitativa vs quantitativa
+```{r}
+## Quartis de salario
+quantile(milsa$Salario)
+## Classificação de acordo com os quartis
+salario.cut <- cut(milsa$Salario, breaks =  quantile(milsa$Salario),
+                   include.lowest = TRUE)
+## Tabela de frequências absolutas
+inst.sal.tb <- table(milsa$Inst, salario.cut)
+inst.sal.tb
+prop.table(inst.sal.tb, margin = 1)
+## Box-plot
+boxplot(Salario ~ Inst, data = milsa)
+## Como obter a média para cada nível de instrução
+with(milsa, tapply(Salario, Inst, mean))
+```
+## Quantitativa vs Quantitativa
+```{r}
+## Classes de Idade
+idade.cut <- with(milsa, cut(Idade, breaks = quantile(Idade),
+                             include.lowest = TRUE))
+table(idade.cut)
+## Classes de salario
+salario.cut <- with(milsa, cut(Salario, breaks = quantile(Salario),
+                               include.lowest = TRUE))
+table(salario.cut)
+## Tabela cruzada
+table(idade.cut, salario.cut)
+prop.table(table(idade.cut, salario.cut), margin = 1)
+idade.cut2 <- with(milsa, cut(Idade,
+                              breaks = quantile(Idade, seq(0, 1, length = 4)),
+                              include.lowest = TRUE))
+salario.cut2 <- with(milsa, cut(Salario,
+                                breaks = quantile(Salario, seq(0, 1, length = 4)),
+                                include.lowest = TRUE))
+table(idade.cut2, salario.cut2)
+prop.table(table(idade.cut2, salario.cut2), margin = 1)
+## Diagrama de dispersão
+plot(x = milsa$Idade, y = milsa$Salario)
+plot(Salario ~ Idade, data = milsa)
+## Coeficiente de correlação linear de Pearson
+with(milsa, cor(Idade, Salario))
+```
+
+
